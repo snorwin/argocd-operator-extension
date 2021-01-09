@@ -1,0 +1,8 @@
+domain: snorwin.io
+layout: go.kubebuilder.io/v3
+projectName: argocd-operator-extension
+repo: github.com/snorwin/argocd-operator-extension
+version: 3-alpha
+plugins:
+  manifests.sdk.operatorframework.io/v2: {}
+  scorecard.sdk.operatorframework.io/v2: {}

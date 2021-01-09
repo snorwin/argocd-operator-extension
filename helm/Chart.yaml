@@ -1,0 +1,12 @@
+apiVersion: v2
+description: ArgoCD Operator Helm chart (including RBAC extension)
+name: argocd
+version: 0.1.0
+sources:
+  - https://github.com/snorwin/argocd-operator-extension.git
+
+dependencies:
+  - name: argocd-operator
+    version: 0.1.0
+  - name: argocd-operator-extension
+    version: 0.1.0

@@ -1,0 +1,71 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  labels:
+    app: {{ .Values.name }}
+  name: {{ .Values.name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.name }}
+    spec:
+      serviceAccountName: {{ .Values.name }}
+      containers:
+        - name: {{ .Values.name }}
+          image: >-
+            quay.io/snorwin/argocd-operator-extension:{{ .Values.version }}
+          imagePullPolicy: Always
+          command:
+            - /opt/go/manager
+          args:
+            - "--zap-log-level={{ .Values.logger.level }}"
+            - "--leader-elect"
+          env:
+            - name: WATCH_NAMESPACE
+              value: ""
+            - name: HELM_DRIVER
+              value: secret
+            - name: HELM_DIRECTORY
+              value: /data/helm
+          ports:
+            - containerPort: 8080
+              name: metrics
+            - containerPort: 8081
+              name: health-probe
+          resources:
+            limits:
+              cpu: {{ .Values.resources.limits.cpu }}
+              memory: {{ .Values.resources.limits.memory }}
+            requests:
+              cpu: {{ .Values.resources.requests.cpu }}
+              memory: {{ .Values.resources.requests.memory }}
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          volumeMounts:
+            - mountPath: /data/helm
+              name: helm-chart
+            - mountPath: /data/helm/templates
+              name: helm-templates
+      volumes:
+        - name: helm-chart
+          configMap:
+            name: argocd-helm-chart
+        - name: helm-templates
+          configMap:
+            name: argocd-helm-templates

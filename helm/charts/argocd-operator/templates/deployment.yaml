@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: argocd-operator
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: argocd-operator
+  template:
+    metadata:
+      labels:
+        name: argocd-operator
+    spec:
+      serviceAccountName: argocd-operator
+      containers:
+        - name: argocd-operator
+          image: quay.io/redhat-cop/argocd-operator:v0.0.15
+          command:
+          - argocd-operator
+          imagePullPolicy: Always
+          env:
+            - name: WATCH_NAMESPACE
+              value: ""
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "argocd-operator"
+          resources: {}

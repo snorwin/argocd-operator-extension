@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.name }}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    service.beta.openshift.io/serving-cert-secret-name: {{ .Values.name }}-certs
+  labels:
+    app: {{ .Values.name }}
+spec:
+  ports:
+    - name: metrics
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    app: {{ .Values.name }}
+  sessionAffinity: None
+  type: ClusterIP
