@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/go-logr/logr"
 	"github.com/snorwin/argocd-operator-extension/pkg/constants"
@@ -81,6 +82,9 @@ func (r *Reconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		if contains(obj.ObjectMeta.Finalizers, constants.FinalizerName) {
 			// uninstall helm chart
 			if _, err := action.NewUninstall(helm).Run(req.Name); err != nil {
+				if err == driver.ErrReleaseNotFound {
+					err = nil
+				}
 				return reconcile.Result{}, err
 			}
 			obj.ObjectMeta.Finalizers = remove(obj.ObjectMeta.Finalizers, constants.FinalizerName)
@@ -111,23 +115,28 @@ func (r *Reconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		values = chartutil.Values{}
 	}
 
-	// load namespaces with matching labels and update dependencies
-	namespaces := corev1.NamespaceList{}
-	if err := r.List(ctx, &namespaces, client.MatchingLabels{
-		constants.LabelArgoCDName:      req.Name,
-		constants.LabelArgoCDNamespace: req.Namespace,
-	}); err != nil {
-		return reconcile.Result{}, err
-	}
+	// specify namespaces if the ArgoCD instance is not running in cluster mode
+	if !contains(strings.Split(os.Getenv(constants.EnvClusterArgoCDNamespacedNames), ","), req.NamespacedName.String()) {
+		// load namespaces with matching labels and update dependencies
+		namespaces := corev1.NamespaceList{}
+		if err := r.List(ctx, &namespaces, client.MatchingLabels{
+			constants.LabelArgoCDName:      req.Name,
+			constants.LabelArgoCDNamespace: req.Namespace,
+		}); err != nil {
+			return reconcile.Result{}, err
+		}
 
-	var slice []string
-	for _, namespace := range namespaces.Items {
-		slice = append(slice, namespace.Name)
+		var slice []string
+		for _, namespace := range namespaces.Items {
+			slice = append(slice, namespace.Name)
 
-		// add dependency
-		r.mapper.Graph.AddDependency(ref, mapper.ReferenceFromObject(&namespace))
+			// add dependency
+			r.mapper.Graph.AddDependency(ref, mapper.ReferenceFromObject(&namespace))
+		}
+		slice = add(slice, req.Namespace)
+
+		values["namespaces"] = slice
 	}
-	values["namespaces"] = slice
 
 	// upgrade or install helm chart
 	if _, err = action.NewStatus(helm).Run(req.Name); err == driver.ErrReleaseNotFound {
