@@ -70,7 +70,7 @@ subjects:
   name: argocd-server
   namespace: {{ .Release.Namespace }}
 {{- $namespace := .Release.Namespace -}}
-{{- range $i, $appNamespace := .Values.namespaces -}}
+{{- range $i, $appNamespace := .Values.namespaces }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -102,4 +102,4 @@ subjects:
   - kind: ServiceAccount
     name: argocd-application-controller
     namespace: {{ $namespace }}
-{{- end -}}
+{{- end }}
