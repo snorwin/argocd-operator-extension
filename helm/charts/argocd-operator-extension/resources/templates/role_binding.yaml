@@ -70,13 +70,13 @@ subjects:
   name: argocd-server
   namespace: {{ .Release.Namespace }}
 {{- $namespace := .Release.Namespace -}}
-{{- range $i, $appNamesapce := .Values.namespaces -}}
+{{- range $i, $appNamespace := .Values.namespaces -}}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: argocd-edit
-  namespace: {{ $appNamesapce }}
+  namespace: {{ $appNamespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -84,7 +84,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: argocd-server
-    namespace: {{ $appNamesapce }}
+    namespace: {{ $namespace }}
   - kind: ServiceAccount
     name: argocd-application-controller
     namespace: {{ $namespace }}
@@ -93,7 +93,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: argocd-view
-  namespace: {{ $appNamesapce }}
+  namespace: {{ $appNamespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
