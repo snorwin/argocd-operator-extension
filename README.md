@@ -6,7 +6,7 @@
 [![Image](https://img.shields.io/badge/image_repository-quay.io-blue)](https://quay.io/repository/snorwin/argocd-operator-extension?tab=tags)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-The **argocd-operator-extension** is an operator extension for the [Argo CD Operator](https://argocd-operator.readthedocs.io/) in order to automate the handling of the Kubernetes RBAC (i.e. service accounts, role bindings) for multiple Argo CD instances in a shared cluster.
+The **argocd-operator-extension** is an operator extension for the [Argo CD Operator](https://argocd-operator.readthedocs.io/) in order to automate the handling of the Kubernetes RBAC (i.e. service accounts, roles, role bindings) for multiple Argo CD instances in a shared cluster.
 
 ## Use case
 By default, Argo CD requires [cluster-wide read privileges](https://argoproj.github.io/argo-cd/operator-manual/security/). 
@@ -18,7 +18,7 @@ The ArgoCD service account, and not Argo CD RBAC, defines the baseline of capabi
 The **argocd-operator-extension** solves all the issue described in the previous section by facilitating that an Argo CD instance is used only for a defined subset of the namespaces without using cluster role bindings. The view and edit roles are only granted to the individual Argo CD service accounts for dedicated namespaces.
 
 ## How it works
-The **argocd-operator-extension** reconciles the `ArgoCD` customer resource of the Argo CD Operator and installs a Helm chart which contains the internal service accounts and role bindings as well as the role bindings to the `argocd-edit` and `argocd-view` cluster role for all the namespaces with the label `argocd.snorwin.io/name` and `argocd.snorwin.io/namedspace` set to the namespaced name of the reconciled object.
+The **argocd-operator-extension** reconciles the `ArgoCD` customer resource of the Argo CD Operator and installs a Helm chart which contains the internal service accounts and role bindings as well as the role bindings to the `argocd-edit` and `argocd-view` cluster role for all the namespaces with the label `argocd.snorwin.io/name` and `argocd.snorwin.io/namespace` set to the namespaced name of the reconciled object.
 The ArgoCD RBAC blueprint is defined as a [Helm chart](helm/charts/argocd-operator-extension/resources) and mounted to the extension using a config map which allows you to use this operator with your existing roles and adapt it that it fits your requirements without re-building the image of the extension.
 
 ## Getting Started
