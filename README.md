@@ -3,6 +3,7 @@
 [![Build](https://img.shields.io/github/workflow/status/snorwin/argocd-operator-extension/CI?label=build&logo=github)](https://github.com/snorwin/argocd-operator-extension/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/snorwin/argocd-operator-extension)](https://goreportcard.com/report/github.com/snorwin/argocd-operator-extension)
 [![Coverage Status](https://coveralls.io/repos/github/snorwin/argocd-operator-extension/badge.svg?branch=main)](https://coveralls.io/github/snorwin/argocd-operator-extension?branch=main)
+[![Image](https://img.shields.io/badge/image_repository-quay.io-blue)](https://quay.io/repository/snorwin/argocd-operator-extension?tab=tags)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 The **argocd-operator-extension** is an operator extension for the [Argo CD Operator](https://argocd-operator.readthedocs.io/) in order to automate the handling of the Kubernetes RBAC (i.e. service accounts, role bindings) for multiple Argo CD instances in a shared cluster.
