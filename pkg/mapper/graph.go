@@ -14,7 +14,7 @@ func (g *DependencyGraph) AddDependency(obj1, obj2 Reference) {
 }
 
 func (g *DependencyGraph) RemoveDependency(obj1, obj2 Reference) {
-	g.set(obj1, obj2, true)
+	g.set(obj1, obj2, false)
 }
 
 func (g *DependencyGraph) GetAllDependenciesFor(obj1 Reference) []Reference {

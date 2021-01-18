@@ -7,6 +7,8 @@ require (
 	github.com/Azure/go-autorest/autorest/adal v0.9.10 // indirect
 	github.com/argoproj-labs/argocd-operator v0.0.14
 	github.com/go-logr/logr v0.3.0
+	github.com/onsi/ginkgo v1.12.1
+	github.com/onsi/gomega v1.10.1
 	go.uber.org/zap v1.14.1
 	helm.sh/helm/v3 v3.4.2
 	k8s.io/api v0.19.4
