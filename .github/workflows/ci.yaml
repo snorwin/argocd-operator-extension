@@ -35,6 +35,11 @@ jobs:
         GOOS: linux
         GOARCH: amd64
 
+    - name: Send coverage
+      uses: shogo82148/actions-goveralls@v1
+      with:
+        path-to-profile: cover.out
+
     - uses: actions/upload-artifact@v2
       with:
         name: manager
