@@ -72,12 +72,8 @@ generate: controller-gen
 
 # Generate mocks
 mocks:
+	go get github.com/golang/mock/mockgen@v1.4.4
 	mockgen -destination pkg/mocks/helm/mock.go   github.com/snorwin/argocd-operator-extension/pkg/helm Client
-
-mockgen:
-ifeq (, $(shell which mockgen))
-	$(shell go get github.com/golang/mock/mockgen@v1.4.3)
-endif
 
 # Build the docker image
 docker-build: test
