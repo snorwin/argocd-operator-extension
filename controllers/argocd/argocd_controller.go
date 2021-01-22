@@ -2,18 +2,15 @@ package argocd
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"strings"
 
 	"github.com/go-logr/logr"
 	"github.com/snorwin/argocd-operator-extension/pkg/constants"
+	"github.com/snorwin/argocd-operator-extension/pkg/helm"
 	"github.com/snorwin/argocd-operator-extension/pkg/mapper"
-	"helm.sh/helm/v3/pkg/action"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/chartutil"
-	"helm.sh/helm/v3/pkg/cli"
-	"helm.sh/helm/v3/pkg/storage/driver"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -32,6 +29,10 @@ type Reconciler struct {
 	Log    logr.Logger
 	Scheme *runtime.Scheme
 
+	// HelmFactory is a factory function to create new Helm clients
+	HelmFactory helm.ClientFactory
+
+	// mapper relates namespaces to ArgoCD instances and vice versa
 	mapper mapper.Mapper
 }
 
@@ -42,6 +43,11 @@ type Reconciler struct {
 
 // SetupWithManager register the ArgoCD Reconciler to the Manager
 func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
+	// set default factory if it was not set before
+	if r.HelmFactory == nil {
+		r.HelmFactory = helm.NewClientForNamespace
+	}
+
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&argoprojv1alpha1.ArgoCD{}).
 		Watches(&source.Kind{Type: &corev1.Namespace{}}, &handler.EnqueueRequestsFromMapFunc{ToRequests: &r.mapper}).
@@ -53,22 +59,19 @@ func (r *Reconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()
 	logger := r.Log.WithValues("argocd", req.NamespacedName)
 
-	// Get reconciled object
+	// get reconciled object
 	obj := argoprojv1alpha1.ArgoCD{}
 	if err := r.Get(ctx, req.NamespacedName, &obj); err != nil {
 		if errors.IsNotFound(err) {
-			// Return and don't requeue
+			// return and don't requeue
 			return reconcile.Result{}, nil
 		}
-		// Error reading the object - requeue the request
+		// error reading the object - requeue the request
 		return reconcile.Result{}, err
 	}
 
-	// create a helm client
-	helm := new(action.Configuration)
-	err := helm.Init(cli.New().RESTClientGetter(), req.Namespace, os.Getenv(constants.EnvHelmDriver), func(format string, v ...interface{}) {
-		logger.V(4).Info(fmt.Sprintf(format, v...))
-	})
+	// create a helm client and inject logger and storage driver
+	helm, err := r.HelmFactory(req.Namespace, helm.WithLogger(logger), helm.WithHelmDriver(os.Getenv(constants.EnvHelmDriver)))
 	if err != nil {
 		return reconcile.Result{}, err
 	}
@@ -81,12 +84,9 @@ func (r *Reconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	if !obj.ObjectMeta.DeletionTimestamp.IsZero() {
 		if contains(obj.ObjectMeta.Finalizers, constants.FinalizerName) {
 			// uninstall helm chart
-			if _, err := action.NewUninstall(helm).Run(req.Name); err != nil {
-				if err == driver.ErrReleaseNotFound {
-					err = nil
-				}
-				return reconcile.Result{}, err
-			}
+			_ = helm.Uninstall(req.Name)
+
+			// remove finalizer
 			obj.ObjectMeta.Finalizers = remove(obj.ObjectMeta.Finalizers, constants.FinalizerName)
 			if err := r.Update(ctx, &obj); err != nil {
 				return ctrl.Result{}, err
@@ -139,18 +139,7 @@ func (r *Reconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	// upgrade or install helm chart
-	if _, err = action.NewStatus(helm).Run(req.Name); err == driver.ErrReleaseNotFound {
-		install := action.NewInstall(helm)
-		install.ReleaseName = req.Name
-		install.Namespace = req.Namespace
-		if _, err = install.Run(chart, values); err != nil {
-			return reconcile.Result{}, err
-		}
-	} else if err == nil {
-		if _, err = action.NewUpgrade(helm).Run(req.Name, chart, values); err != nil {
-			return reconcile.Result{}, err
-		}
-	} else {
+	if err = helm.Upgrade(req.Name, chart, values, true); err != nil {
 		return reconcile.Result{}, err
 	}
 

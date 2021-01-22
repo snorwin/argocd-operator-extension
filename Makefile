@@ -26,7 +26,7 @@ endif
 all: manager
 
 # Run tests
-test: generate fmt vet manifests
+test: generate mocks fmt vet manifests
 	go test ./... -coverprofile cover.out
 
 # Build manager binary
@@ -69,6 +69,11 @@ vet:
 # Generate code
 generate: controller-gen
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
+
+# Generate mocks
+mocks:
+	go get github.com/golang/mock/mockgen@v1.4.4
+	mockgen -destination pkg/mocks/helm/mock.go   github.com/snorwin/argocd-operator-extension/pkg/helm Client
 
 # Build the docker image
 docker-build: test

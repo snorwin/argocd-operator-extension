@@ -4,29 +4,35 @@ import (
 	"sync"
 )
 
+// DependencyGraph is a data structure to track bi-directional dependencies between two Reference
 type DependencyGraph struct {
 	sync.RWMutex
 	edges map[Reference]map[Reference]bool
 }
 
+// AddDependency adds a dependency between two Reference
 func (g *DependencyGraph) AddDependency(obj1, obj2 Reference) {
 	g.set(obj1, obj2, true)
 }
 
+// RemoveDependency removes a dependency between two Reference
 func (g *DependencyGraph) RemoveDependency(obj1, obj2 Reference) {
 	g.set(obj1, obj2, false)
 }
 
+// GetAllDependenciesFor gets all dependencies of a Reference
 func (g *DependencyGraph) GetAllDependenciesFor(obj1 Reference) []Reference {
 	return g.getAll(obj1)
 }
 
+// RemoveAllDependenciesFor removes all dependencies of a Reference
 func (g *DependencyGraph) RemoveAllDependenciesFor(obj1 Reference) {
 	for _, obj2 := range g.GetAllDependenciesFor(obj1) {
 		g.RemoveDependency(obj1, obj2)
 	}
 }
 
+// HasDependency checks if a dependency exists between two Reference
 func (g *DependencyGraph) HasDependency(obj1, obj2 Reference) bool {
 	return g.get(obj1, obj2)
 }
