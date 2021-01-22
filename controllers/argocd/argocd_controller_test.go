@@ -32,7 +32,12 @@ import (
 
 var _ = Describe("Reconciler", func() {
 	Context("Reconcile", func() {
+		var (
+			mockCtrl *gomock.Controller
+			mockHelm *mock_helm.MockClient
+		)
 		BeforeEach(func() {
+			// Set environment variables
 			wd, err := os.Getwd()
 			Ω(err).ShouldNot(HaveOccurred())
 			d := filepath.Join(wd, "/../../helm/charts/argocd-operator-extension/resources")
@@ -41,6 +46,13 @@ var _ = Describe("Reconciler", func() {
 			Ω(os.Setenv(constants.EnvHelmDriver, "")).ShouldNot(HaveOccurred())
 
 			Ω(os.Setenv(constants.EnvClusterArgoCDNamespacedNames, "")).ShouldNot(HaveOccurred())
+
+			// Create helm mock client
+			mockCtrl = gomock.NewController(GinkgoT())
+			mockHelm = mock_helm.NewMockClient(mockCtrl)
+		})
+		AfterEach(func() {
+			mockCtrl.Finish()
 		})
 		It("should_install_helm_chart_and_add_finalizer", func() {
 			argocd := &argoprojv1alpha1.ArgoCD{
@@ -50,10 +62,6 @@ var _ = Describe("Reconciler", func() {
 				},
 			}
 
-			mockCtrl := gomock.NewController(GinkgoT())
-			defer mockCtrl.Finish()
-
-			mockHelm := mock_helm.NewMockClient(mockCtrl)
 			mockHelm.
 				EXPECT().
 				Upgrade(argocd.Name, gomock.Any(), Values("namespaces", []string{"default"}), true).
@@ -72,10 +80,6 @@ var _ = Describe("Reconciler", func() {
 
 			Ω(os.Setenv(constants.EnvClusterArgoCDNamespacedNames, fmt.Sprintf("%s/%s", argocd.Namespace, argocd.Name))).ShouldNot(HaveOccurred())
 
-			mockCtrl := gomock.NewController(GinkgoT())
-			defer mockCtrl.Finish()
-
-			mockHelm := mock_helm.NewMockClient(mockCtrl)
 			mockHelm.
 				EXPECT().
 				Upgrade(argocd.Name, gomock.Any(), Values("namespaces", nil), true).
@@ -114,10 +118,6 @@ var _ = Describe("Reconciler", func() {
 				}},
 			}
 
-			mockCtrl := gomock.NewController(GinkgoT())
-			defer mockCtrl.Finish()
-
-			mockHelm := mock_helm.NewMockClient(mockCtrl)
 			mockHelm.
 				EXPECT().
 				Upgrade(argocd.Name, gomock.Any(), Values("namespaces", []string{"myapp3", "myapp4", "default"}), true).
@@ -135,10 +135,6 @@ var _ = Describe("Reconciler", func() {
 				},
 			}
 
-			mockCtrl := gomock.NewController(GinkgoT())
-			defer mockCtrl.Finish()
-
-			mockHelm := mock_helm.NewMockClient(mockCtrl)
 			mockHelm.
 				EXPECT().
 				Uninstall(argocd.Name).
@@ -157,10 +153,6 @@ var _ = Describe("Reconciler", func() {
 				},
 			}
 
-			mockCtrl := gomock.NewController(GinkgoT())
-			defer mockCtrl.Finish()
-
-			mockHelm := mock_helm.NewMockClient(mockCtrl)
 			mockHelm.
 				EXPECT().
 				Uninstall(argocd.Name).
@@ -170,11 +162,6 @@ var _ = Describe("Reconciler", func() {
 			Ω(actual.Finalizers).ShouldNot(ContainElement(constants.FinalizerName))
 		})
 		It("should_nop_if_argocd_does_not_exist", func() {
-			mockCtrl := gomock.NewController(GinkgoT())
-			defer mockCtrl.Finish()
-
-			mockHelm := mock_helm.NewMockClient(mockCtrl)
-
 			s := scheme.Scheme
 			Ω(argoprojv1alpha1.SchemeBuilder.AddToScheme(s)).ShouldNot(HaveOccurred())
 			cl := client.NewFakeClientWithScheme(s)
