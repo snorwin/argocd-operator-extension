@@ -24,6 +24,7 @@ The ArgoCD RBAC blueprint is defined as a [Helm chart](helm/charts/argocd-operat
 
 ## Getting Started
 ### Installation
+There are two ways how the **argocd-operator-extension** can be installed:
 #### Helm
 1. Clone this repository and if required adapt the Argo CD RBAC blueprint helm chart.
 2. Install the [Helm chart](helm/) in order to install the bundle of the Argo CD Operator including the extension.
