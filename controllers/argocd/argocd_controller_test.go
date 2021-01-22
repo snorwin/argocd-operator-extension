@@ -57,8 +57,7 @@ var _ = Describe("Reconciler", func() {
 			mockHelm.
 				EXPECT().
 				Upgrade(argocd.Name, gomock.Any(), Values("namespaces", []string{"default"}), true).
-				Return(nil).
-				Times(1)
+				Return(nil)
 
 			actual := testReconcile(mockHelm, argocd)
 			Ω(actual.Finalizers).Should(ContainElement(constants.FinalizerName))
@@ -80,8 +79,7 @@ var _ = Describe("Reconciler", func() {
 			mockHelm.
 				EXPECT().
 				Upgrade(argocd.Name, gomock.Any(), Values("namespaces", nil), true).
-				Return(nil).
-				Times(1)
+				Return(nil)
 
 			testReconcile(mockHelm, argocd)
 		})
@@ -123,8 +121,7 @@ var _ = Describe("Reconciler", func() {
 			mockHelm.
 				EXPECT().
 				Upgrade(argocd.Name, gomock.Any(), Values("namespaces", []string{"myapp3", "myapp4", "default"}), true).
-				Return(nil).
-				Times(1)
+				Return(nil)
 
 			testReconcile(mockHelm, argocd, namespaces...)
 		})
@@ -145,8 +142,7 @@ var _ = Describe("Reconciler", func() {
 			mockHelm.
 				EXPECT().
 				Uninstall(argocd.Name).
-				Return(nil).
-				Times(1)
+				Return(nil)
 
 			actual := testReconcile(mockHelm, argocd)
 			Ω(actual.Finalizers).ShouldNot(ContainElement(constants.FinalizerName))
@@ -168,8 +164,7 @@ var _ = Describe("Reconciler", func() {
 			mockHelm.
 				EXPECT().
 				Uninstall(argocd.Name).
-				Return(errors.New("uninstall: Release not loaded")).
-				Times(1)
+				Return(errors.New("uninstall: Release not loaded"))
 
 			actual := testReconcile(mockHelm, argocd)
 			Ω(actual.Finalizers).ShouldNot(ContainElement(constants.FinalizerName))
