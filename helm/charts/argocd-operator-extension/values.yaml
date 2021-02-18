@@ -1,5 +1,8 @@
 name: argocd-operator-extension
 version: latest
+helm:
+  driver: secret
+  maxHistory: 10
 logger:
   level: info
 resources:

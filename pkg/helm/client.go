@@ -22,9 +22,10 @@ type ClientFactory func(namespace string, options ...ClientOption) (Client, erro
 type client struct {
 	action.Configuration
 
-	namespace string
-	driver    string
-	logger    func(format string, v ...interface{})
+	maxHistory int
+	namespace  string
+	driver     string
+	logger     func(format string, v ...interface{})
 }
 
 // NewClientForNamespace is a ClientFactory
@@ -60,7 +61,9 @@ func (c *client) Upgrade(release string, chart *chart.Chart, values chartutil.Va
 	if _, err := action.NewStatus(&c.Configuration).Run(release); err == driver.ErrReleaseNotFound && install {
 		return c.Install(release, chart, values)
 	} else if err == nil {
-		if _, err = action.NewUpgrade(&c.Configuration).Run(release, chart, values); err != nil {
+		upgrade := action.NewUpgrade(&c.Configuration)
+		upgrade.MaxHistory = c.maxHistory
+		if _, err = upgrade.Run(release, chart, values); err != nil {
 			return err
 		}
 	} else {

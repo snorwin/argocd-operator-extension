@@ -3,6 +3,7 @@ package argocd
 import (
 	"context"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/go-logr/logr"
@@ -22,6 +23,21 @@ import (
 
 	argoprojv1alpha1 "github.com/argoproj-labs/argocd-operator/pkg/apis/argoproj/v1alpha1"
 )
+
+var (
+	driver     string
+	maxHistory = 10
+)
+
+func init() {
+	driver = os.Getenv(constants.EnvHelmDriver)
+	if e, ok := os.LookupEnv(constants.EnvHelmMaxHistory); ok {
+		i, err := strconv.Atoi(e)
+		if err == nil {
+			maxHistory = i
+		}
+	}
+}
 
 // Reconciler reconciles a ArgoCD object
 type Reconciler struct {
@@ -71,7 +87,7 @@ func (r *Reconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	// create a helm client and inject logger and storage driver
-	helm, err := r.HelmFactory(req.Namespace, helm.WithLogger(logger), helm.WithHelmDriver(os.Getenv(constants.EnvHelmDriver)))
+	helm, err := r.HelmFactory(req.Namespace, helm.WithLogger(logger), helm.WithHelmDriver(driver), helm.WithMaxHistory(maxHistory))
 	if err != nil {
 		return reconcile.Result{}, err
 	}

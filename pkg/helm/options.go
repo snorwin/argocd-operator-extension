@@ -16,6 +16,13 @@ func WithHelmDriver(driver string) ClientOption {
 	}
 }
 
+// WithMaxHistory limit the maximum number of revisions saved per release. Use 0 for no limit
+func WithMaxHistory(maxHistory int) ClientOption {
+	return func(client *client) {
+		client.maxHistory = maxHistory
+	}
+}
+
 // WithLogger injects a logr.Logger to the client configuration
 func WithLogger(logger logr.Logger) ClientOption {
 	return func(c *client) {
