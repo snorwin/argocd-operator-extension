@@ -31,7 +31,7 @@ var (
 
 func init() {
 	driver = os.Getenv(constants.EnvHelmDriver)
-	if e, ok := os.LookupEnv(constants.EnvMaxHistory); ok {
+	if e, ok := os.LookupEnv(constants.EnvHelmMaxHistory); ok {
 		i, err := strconv.Atoi(e)
 		if err == nil {
 			maxHistory = i

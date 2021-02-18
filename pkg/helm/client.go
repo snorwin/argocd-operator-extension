@@ -61,9 +61,9 @@ func (c *client) Upgrade(release string, chart *chart.Chart, values chartutil.Va
 	if _, err := action.NewStatus(&c.Configuration).Run(release); err == driver.ErrReleaseNotFound && install {
 		return c.Install(release, chart, values)
 	} else if err == nil {
-		ua := action.NewUpgrade(&c.Configuration)
-		ua.MaxHistory = c.maxHistory
-		if _, err = ua.Run(release, chart, values); err != nil {
+		upgrade := action.NewUpgrade(&c.Configuration)
+		upgrade.MaxHistory = c.maxHistory
+		if _, err = upgrade.Run(release, chart, values); err != nil {
 			return err
 		}
 	} else {
