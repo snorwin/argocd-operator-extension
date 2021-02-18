@@ -61,6 +61,7 @@ _Prerequisite: Argo CD Operator is already installed_
  ### Environment Variables
  - `HELM_DIRECTORY` - directory of the Helm chart in the container
  - `HELM_DRIVER` - helm storage driver. It can be set to one of the values: `configmap`, `secret`, `memory` (default value: `secret`)
+ - `HELM_MAX_HISTORY` - limit the maximum number of revisions saved per helm release (default: 10). Use 0 for no limit.
  - `CLUSTER_ARGOCD_NAMESPACEDNAMES` - comma separated list of NamespacedNames (`namespace/name`) of Argo CD instances which run in cluster mode
  
  ## Compatibility
