@@ -30,7 +30,9 @@ spec:
             - name: WATCH_NAMESPACE
               value: ""
             - name: HELM_DRIVER
-              value: secret
+              value: '{{ .Values.helm.driver }}'
+            - name: HELM_MAX_HISTORY
+              value: '{{ .Values.helm.maxHistory }}'
             - name: HELM_DIRECTORY
               value: /data/helm
           ports:
