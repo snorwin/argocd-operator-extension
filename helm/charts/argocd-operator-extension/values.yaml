@@ -12,3 +12,7 @@ resources:
   requests:
     cpu: 100m
     memory: 128Mi
+images:
+  argocd: argoproj/argocd:v1.8.6
+  dex: dexidp/dex:v2.27.0
+  redis: redis:5.0.10-alpine

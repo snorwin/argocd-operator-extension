@@ -35,6 +35,12 @@ spec:
               value: '{{ .Values.helm.maxHistory }}'
             - name: HELM_DIRECTORY
               value: /data/helm
+            - name: ARGOCD_IMAGE
+              value: {{ .Values.images.argocd }}
+            - name: DEX_IMAGE
+              value: {{ .Values.images.dex }}
+            - name: REDIS_IMAGE
+              value: {{ .Values.images.redis }}
           ports:
             - containerPort: 8080
               name: metrics
