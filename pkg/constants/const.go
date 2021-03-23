@@ -4,6 +4,8 @@ const (
 	// AnnotationImageVersionUpdatePolicy - specify the update policy of the images and versions,
 	// allowed values are: 'None', 'Always' or 'IfNotPresent' (default: 'None')
 	AnnotationImageVersionUpdatePolicy = "argocd.snorwin.io/image-update-policy"
+	// AnnotationHelmHash - hash to track the helm chart and values installed for this ArgoCD instance
+	AnnotationHelmHash = "argocd.snorwin.io/helm-hash"
 
 	// ImageVersionUpdatePolicy
 	ImageVersionUpdatePolicyNone         = "None"
@@ -24,7 +26,7 @@ const (
 	EnvHelmMaxHistory = "HELM_MAX_HISTORY"
 	// EnvHelmDirectory - directory of the Helm chart
 	EnvHelmDirectory = "HELM_DIRECTORY"
-	// EnvClusterArgoCDNamespacedNames - comma separated list of NamespacedNames (namespace/name) of Argo CD instances which run in cluster mode
+	// EnvClusterArgoCDNamespacedNames - comma separated list of NamespacedNames (namespace/name) of ArgoCD instances which run in cluster mode
 	EnvClusterArgoCDNamespacedNames = "CLUSTER_ARGOCD_NAMESPACEDNAMES"
 	// EnvArgoCDImage - ArgoCD image and version (<image>:<version>) used for automated version updates
 	EnvArgoCDImage = "ARGOCD_IMAGE"

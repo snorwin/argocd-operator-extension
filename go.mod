@@ -9,7 +9,7 @@ require (
 	github.com/golang/mock v1.4.4
 	github.com/onsi/ginkgo v1.15.0
 	github.com/onsi/gomega v1.10.5
-	github.com/snorwin/jsonpatch v1.2.0
+	github.com/snorwin/jsonpatch v1.3.0
 	go.uber.org/zap v1.14.1
 	helm.sh/helm/v3 v3.4.2
 	k8s.io/api v0.19.4
