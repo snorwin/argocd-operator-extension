@@ -61,12 +61,12 @@ jobs:
 
       - run: chmod +x manager
 
-      - name: Login to quay.io
+      - name: Login to ghcr.io
         uses: docker/login-action@v1
         with:
-          registry: quay.io
-          username: ${{ secrets.QUAYIO_USER }}
-          password: ${{ secrets.QUAYIO_TOKEN }}
+          registry: ghcr.io
+          username: $GITHUB_ACTOR
+          password: ${{ secrets.GHCR_TOKEN }}
 
       - run: cp build/Dockerfile .
 
@@ -76,4 +76,4 @@ jobs:
           context: .
           file: ./Dockerfile
           push: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
-          tags: quay.io/snorwin/argocd-operator-extension:latest
+          tags: ghcr.io/snorwin/argocd-operator-extension:latest
