@@ -19,7 +19,7 @@ spec:
       containers:
         - name: {{ .Values.name }}
           image: >-
-            quay.io/snorwin/argocd-operator-extension:{{ .Values.version }}
+            ghcr.io/snorwin/argocd-operator-extension:{{ .Values.version }}
           imagePullPolicy: Always
           command:
             - /opt/go/manager

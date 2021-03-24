@@ -36,7 +36,7 @@ _Prerequisite: Argo CD Operator is already installed_
 1. Clone this repository and if required adapt the Argo CD RBAC blueprint helm chart.
 2. Create a Dockerfile:
     ```
-    FROM quay.io/snorwin/argocd-operator-extension:latest
+    FROM ghcr.io/snorwin/argocd-operator-extension:latest
     
     ENV HELM_DIRECTORY=/data/helm
     
