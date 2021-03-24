@@ -10,11 +10,13 @@ import (
 	"github.com/snorwin/argocd-operator-extension/pkg/constants"
 	"github.com/snorwin/argocd-operator-extension/pkg/helm"
 	"github.com/snorwin/argocd-operator-extension/pkg/mapper"
+	"github.com/snorwin/jsonpatch"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/chartutil"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
@@ -116,6 +118,66 @@ func (r *Reconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		obj.ObjectMeta.Finalizers = add(obj.ObjectMeta.Finalizers, constants.FinalizerName)
 		if err := r.Update(ctx, &obj); err != nil {
 			return ctrl.Result{}, err
+		}
+	}
+
+	// update image and version
+	if policy, ok := obj.Annotations[constants.AnnotationImageVersionUpdatePolicy]; ok && policy != constants.ImageVersionUpdatePolicyNone {
+		original := obj.Spec.DeepCopy()
+
+		// set the ArgoCD image and version
+		if (policy == constants.ImageVersionUpdatePolicyAlways) ||
+			(obj.Spec.Image == "" && obj.Spec.Version == "" && policy == constants.ImageVersionUpdatePolicyIfNotPresent) {
+			if image := os.Getenv(constants.EnvArgoCDImage); image != "" {
+				split := strings.Split(image, ":")
+				if split[0] != "" {
+					obj.Spec.Image = split[0]
+				}
+				if len(split) > 1 {
+					obj.Spec.Version = split[1]
+				}
+			}
+		}
+
+		// set the ArgoCD Dex image and version
+		if (policy == constants.ImageVersionUpdatePolicyAlways) ||
+			(obj.Spec.Dex.Image == "" && obj.Spec.Dex.Version == "" && policy == constants.ImageVersionUpdatePolicyIfNotPresent) {
+			if image := os.Getenv(constants.EnvDexImage); image != "" {
+				split := strings.Split(image, ":")
+				if split[0] != "" {
+					obj.Spec.Dex.Image = split[0]
+				}
+				if len(split) > 1 {
+					obj.Spec.Dex.Version = split[1]
+				}
+			}
+		}
+
+		// set the Redis image and version
+		if (policy == constants.ImageVersionUpdatePolicyAlways) ||
+			(obj.Spec.Redis.Image == "" && obj.Spec.Redis.Version == "" && policy == constants.ImageVersionUpdatePolicyIfNotPresent) {
+			if image := os.Getenv(constants.EnvRedisImage); image != "" {
+				split := strings.Split(image, ":")
+				if split[0] != "" {
+					obj.Spec.Redis.Image = split[0]
+				}
+				if len(split) > 1 {
+					obj.Spec.Redis.Version = split[1]
+				}
+			}
+		}
+
+		// create patch to set or update images and versions
+		patches, err := jsonpatch.CreateJSONPatch(&obj.Spec, original, jsonpatch.WithPrefix(jsonpatch.ParseJSONPointer("/spec")))
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+
+		// patch only if necessary in order to prevent endless reconcile loops between the extension and the actual argocd-operator
+		if patches.Len() > 0 {
+			if err = r.Patch(ctx, &obj, client.RawPatch(types.JSONPatchType, patches.Raw())); err != nil {
+				return reconcile.Result{}, err
+			}
 		}
 	}
 

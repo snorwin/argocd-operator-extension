@@ -1,6 +1,15 @@
 package constants
 
 const (
+	// AnnotationImageVersionUpdatePolicy - specify the update policy of the images and versions,
+	// allowed values are: 'None', 'Always' or 'IfNotPresent' (default: 'None')
+	AnnotationImageVersionUpdatePolicy = "argocd.snorwin.io/image-update-policy"
+
+	// ImageVersionUpdatePolicy
+	ImageVersionUpdatePolicyNone         = "None"
+	ImageVersionUpdatePolicyAlways       = "Always"
+	ImageVersionUpdatePolicyIfNotPresent = "IfNotPresent"
+
 	// LabelArgoCDName - namespace label to specify the ArgoCD name
 	LabelArgoCDName = "argocd.snorwin.io/name"
 	// LabelArgoCDNamespace - namespace label to specify the ArgoCD namespace
@@ -17,4 +26,10 @@ const (
 	EnvHelmDirectory = "HELM_DIRECTORY"
 	// EnvClusterArgoCDNamespacedNames - comma separated list of NamespacedNames (namespace/name) of Argo CD instances which run in cluster mode
 	EnvClusterArgoCDNamespacedNames = "CLUSTER_ARGOCD_NAMESPACEDNAMES"
+	// EnvArgoCDImage - ArgoCD image and version (<image>:<version>) used for automated version updates
+	EnvArgoCDImage = "ARGOCD_IMAGE"
+	// EnvDexImage - Dex image and version (<image>:<version>) used for automated version updates
+	EnvDexImage = "DEX_IMAGE"
+	// EnvRedisImage - Redis image and version (<image>:<version>) used for automated version updates
+	EnvRedisImage = "REDIS_IMAGE"
 )

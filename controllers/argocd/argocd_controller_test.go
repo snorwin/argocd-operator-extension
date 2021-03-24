@@ -53,6 +53,10 @@ var _ = Describe("Reconciler", func() {
 		})
 		AfterEach(func() {
 			mockCtrl.Finish()
+
+			Ω(os.Unsetenv(constants.EnvArgoCDImage)).ShouldNot(HaveOccurred())
+			Ω(os.Unsetenv(constants.EnvDexImage)).ShouldNot(HaveOccurred())
+			Ω(os.Unsetenv(constants.EnvRedisImage)).ShouldNot(HaveOccurred())
 		})
 		It("should_install_helm_chart_and_add_finalizer", func() {
 			argocd := &argoprojv1alpha1.ArgoCD{
@@ -69,6 +73,439 @@ var _ = Describe("Reconciler", func() {
 
 			actual := testReconcile(mockHelm, argocd)
 			Ω(actual.Finalizers).Should(ContainElement(constants.FinalizerName))
+		})
+		It("should_set_argocd_image_and_version_if_not_present", func() {
+			image := "argocd"
+			tag := "v1.2.3"
+
+			Ω(os.Setenv(constants.EnvArgoCDImage, fmt.Sprintf("%s:%s", image, tag))).ShouldNot(HaveOccurred())
+
+			argocd := &argoprojv1alpha1.ArgoCD{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "argocd",
+					Namespace: "default",
+					Annotations: map[string]string{
+						constants.AnnotationImageVersionUpdatePolicy: constants.ImageVersionUpdatePolicyIfNotPresent,
+					},
+				},
+			}
+
+			mockHelm.
+				EXPECT().
+				Upgrade(argocd.Name, gomock.Any(), Values("namespaces", []string{"default"}), true).
+				Return(nil)
+
+			actual := testReconcile(mockHelm, argocd)
+			Ω(actual.Spec.Image).Should(Equal(image))
+			Ω(actual.Spec.Version).Should(Equal(tag))
+		})
+		It("should_only_set_argocd_image_and_version_if_not_present", func() {
+			image := "argocd"
+			tag := "v1.2.3"
+
+			Ω(os.Setenv(constants.EnvArgoCDImage, fmt.Sprintf("%s:%s", image, tag))).ShouldNot(HaveOccurred())
+
+			argocd := &argoprojv1alpha1.ArgoCD{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "argocd",
+					Namespace: "default",
+					Annotations: map[string]string{
+						constants.AnnotationImageVersionUpdatePolicy: constants.ImageVersionUpdatePolicyIfNotPresent,
+					},
+				},
+				Spec: argoprojv1alpha1.ArgoCDSpec{
+					Version: "latest",
+					Image:   "myargocd",
+				},
+			}
+
+			mockHelm.
+				EXPECT().
+				Upgrade(argocd.Name, gomock.Any(), Values("namespaces", []string{"default"}), true).
+				Return(nil)
+
+			actual := testReconcile(mockHelm, argocd)
+			Ω(actual.Spec.Image).Should(Equal(argocd.Spec.Image))
+			Ω(actual.Spec.Version).Should(Equal(argocd.Spec.Version))
+		})
+		It("should_set_argocd_image_and_version_always", func() {
+			image := "argocd"
+			tag := "v1.2.3"
+
+			Ω(os.Setenv(constants.EnvArgoCDImage, fmt.Sprintf("%s:%s", image, tag))).ShouldNot(HaveOccurred())
+
+			argocd := &argoprojv1alpha1.ArgoCD{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "argocd",
+					Namespace: "default",
+					Annotations: map[string]string{
+						constants.AnnotationImageVersionUpdatePolicy: constants.ImageVersionUpdatePolicyAlways,
+					},
+				},
+				Spec: argoprojv1alpha1.ArgoCDSpec{
+					Version: "latest",
+					Image:   "myargocd",
+				},
+			}
+
+			mockHelm.
+				EXPECT().
+				Upgrade(argocd.Name, gomock.Any(), Values("namespaces", []string{"default"}), true).
+				Return(nil)
+
+			actual := testReconcile(mockHelm, argocd)
+			Ω(actual.Spec.Image).Should(Equal(image))
+			Ω(actual.Spec.Version).Should(Equal(tag))
+		})
+		It("should_set_argocd_image_only", func() {
+			image := "argocd"
+
+			Ω(os.Setenv(constants.EnvArgoCDImage, image)).ShouldNot(HaveOccurred())
+
+			argocd := &argoprojv1alpha1.ArgoCD{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "argocd",
+					Namespace: "default",
+					Annotations: map[string]string{
+						constants.AnnotationImageVersionUpdatePolicy: constants.ImageVersionUpdatePolicyAlways,
+					},
+				},
+				Spec: argoprojv1alpha1.ArgoCDSpec{
+					Version: "latest",
+					Image:   "myargocd",
+				},
+			}
+
+			mockHelm.
+				EXPECT().
+				Upgrade(argocd.Name, gomock.Any(), Values("namespaces", []string{"default"}), true).
+				Return(nil)
+
+			actual := testReconcile(mockHelm, argocd)
+			Ω(actual.Spec.Image).Should(Equal(image))
+			Ω(actual.Spec.Version).Should(Equal(argocd.Spec.Version))
+		})
+		It("should_set_argocd_version_only", func() {
+			tag := "v1.2.3"
+
+			Ω(os.Setenv(constants.EnvArgoCDImage, ":"+tag)).ShouldNot(HaveOccurred())
+
+			argocd := &argoprojv1alpha1.ArgoCD{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "argocd",
+					Namespace: "default",
+					Annotations: map[string]string{
+						constants.AnnotationImageVersionUpdatePolicy: constants.ImageVersionUpdatePolicyAlways,
+					},
+				},
+				Spec: argoprojv1alpha1.ArgoCDSpec{
+					Version: "latest",
+					Image:   "myargocd",
+				},
+			}
+
+			mockHelm.
+				EXPECT().
+				Upgrade(argocd.Name, gomock.Any(), Values("namespaces", []string{"default"}), true).
+				Return(nil)
+
+			actual := testReconcile(mockHelm, argocd)
+			Ω(actual.Spec.Image).Should(Equal(argocd.Spec.Image))
+			Ω(actual.Spec.Version).Should(Equal(tag))
+		})
+		It("should_set_dex_image_and_version_if_not_present", func() {
+			image := "dex"
+			tag := "v1.2.3"
+
+			Ω(os.Setenv(constants.EnvDexImage, fmt.Sprintf("%s:%s", image, tag))).ShouldNot(HaveOccurred())
+
+			argocd := &argoprojv1alpha1.ArgoCD{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "argocd",
+					Namespace: "default",
+					Annotations: map[string]string{
+						constants.AnnotationImageVersionUpdatePolicy: constants.ImageVersionUpdatePolicyIfNotPresent,
+					},
+				},
+			}
+
+			mockHelm.
+				EXPECT().
+				Upgrade(argocd.Name, gomock.Any(), Values("namespaces", []string{"default"}), true).
+				Return(nil)
+
+			actual := testReconcile(mockHelm, argocd)
+			Ω(actual.Spec.Dex.Image).Should(Equal(image))
+			Ω(actual.Spec.Dex.Version).Should(Equal(tag))
+		})
+		It("should_only_set_dex_image_and_version_if_not_present", func() {
+			image := "dex"
+			tag := "v1.2.3"
+
+			Ω(os.Setenv(constants.EnvDexImage, fmt.Sprintf("%s:%s", image, tag))).ShouldNot(HaveOccurred())
+
+			argocd := &argoprojv1alpha1.ArgoCD{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "argocd",
+					Namespace: "default",
+					Annotations: map[string]string{
+						constants.AnnotationImageVersionUpdatePolicy: constants.ImageVersionUpdatePolicyIfNotPresent,
+					},
+				},
+				Spec: argoprojv1alpha1.ArgoCDSpec{
+					Dex: argoprojv1alpha1.ArgoCDDexSpec{
+						Version: "latest",
+						Image:   "mydex",
+					},
+				},
+			}
+
+			mockHelm.
+				EXPECT().
+				Upgrade(argocd.Name, gomock.Any(), Values("namespaces", []string{"default"}), true).
+				Return(nil)
+
+			actual := testReconcile(mockHelm, argocd)
+			Ω(actual.Spec.Dex.Image).Should(Equal(argocd.Spec.Dex.Image))
+			Ω(actual.Spec.Dex.Version).Should(Equal(argocd.Spec.Dex.Version))
+		})
+		It("should_set_dex_image_and_version_always", func() {
+			image := "dex"
+			tag := "v1.2.3"
+
+			Ω(os.Setenv(constants.EnvDexImage, fmt.Sprintf("%s:%s", image, tag))).ShouldNot(HaveOccurred())
+
+			argocd := &argoprojv1alpha1.ArgoCD{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "argocd",
+					Namespace: "default",
+					Annotations: map[string]string{
+						constants.AnnotationImageVersionUpdatePolicy: constants.ImageVersionUpdatePolicyAlways,
+					},
+				},
+				Spec: argoprojv1alpha1.ArgoCDSpec{
+					Dex: argoprojv1alpha1.ArgoCDDexSpec{
+						Version: "latest",
+						Image:   "mydex",
+					},
+				},
+			}
+
+			mockHelm.
+				EXPECT().
+				Upgrade(argocd.Name, gomock.Any(), Values("namespaces", []string{"default"}), true).
+				Return(nil)
+
+			actual := testReconcile(mockHelm, argocd)
+			Ω(actual.Spec.Dex.Image).Should(Equal(image))
+			Ω(actual.Spec.Dex.Version).Should(Equal(tag))
+		})
+		It("should_set_dex_image_only", func() {
+			image := "dex"
+
+			Ω(os.Setenv(constants.EnvDexImage, image)).ShouldNot(HaveOccurred())
+
+			argocd := &argoprojv1alpha1.ArgoCD{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "argocd",
+					Namespace: "default",
+					Annotations: map[string]string{
+						constants.AnnotationImageVersionUpdatePolicy: constants.ImageVersionUpdatePolicyAlways,
+					},
+				},
+				Spec: argoprojv1alpha1.ArgoCDSpec{
+					Dex: argoprojv1alpha1.ArgoCDDexSpec{
+						Version: "latest",
+						Image:   "mydex",
+					},
+				},
+			}
+
+			mockHelm.
+				EXPECT().
+				Upgrade(argocd.Name, gomock.Any(), Values("namespaces", []string{"default"}), true).
+				Return(nil)
+
+			actual := testReconcile(mockHelm, argocd)
+			Ω(actual.Spec.Dex.Image).Should(Equal(image))
+			Ω(actual.Spec.Dex.Version).Should(Equal(argocd.Spec.Dex.Version))
+		})
+		It("should_set_dex_version_only", func() {
+			tag := "v1.2.3"
+
+			Ω(os.Setenv(constants.EnvDexImage, ":"+tag)).ShouldNot(HaveOccurred())
+
+			argocd := &argoprojv1alpha1.ArgoCD{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "argocd",
+					Namespace: "default",
+					Annotations: map[string]string{
+						constants.AnnotationImageVersionUpdatePolicy: constants.ImageVersionUpdatePolicyAlways,
+					},
+				},
+				Spec: argoprojv1alpha1.ArgoCDSpec{
+					Dex: argoprojv1alpha1.ArgoCDDexSpec{
+						Version: "latest",
+						Image:   "mydex",
+					},
+				},
+			}
+
+			mockHelm.
+				EXPECT().
+				Upgrade(argocd.Name, gomock.Any(), Values("namespaces", []string{"default"}), true).
+				Return(nil)
+
+			actual := testReconcile(mockHelm, argocd)
+			Ω(actual.Spec.Dex.Image).Should(Equal(argocd.Spec.Dex.Image))
+			Ω(actual.Spec.Dex.Version).Should(Equal(tag))
+		})
+		It("should_set_redis_image_and_version_if_not_present", func() {
+			image := "redis"
+			tag := "v1.2.3"
+
+			Ω(os.Setenv(constants.EnvRedisImage, fmt.Sprintf("%s:%s", image, tag))).ShouldNot(HaveOccurred())
+
+			argocd := &argoprojv1alpha1.ArgoCD{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "argocd",
+					Namespace: "default",
+					Annotations: map[string]string{
+						constants.AnnotationImageVersionUpdatePolicy: constants.ImageVersionUpdatePolicyIfNotPresent,
+					},
+				},
+			}
+
+			mockHelm.
+				EXPECT().
+				Upgrade(argocd.Name, gomock.Any(), Values("namespaces", []string{"default"}), true).
+				Return(nil)
+
+			actual := testReconcile(mockHelm, argocd)
+			Ω(actual.Spec.Redis.Image).Should(Equal(image))
+			Ω(actual.Spec.Redis.Version).Should(Equal(tag))
+		})
+		It("should_only_set_redis_image_and_version_if_not_present", func() {
+			image := "redis"
+			tag := "v1.2.3"
+
+			Ω(os.Setenv(constants.EnvDexImage, fmt.Sprintf("%s:%s", image, tag))).ShouldNot(HaveOccurred())
+
+			argocd := &argoprojv1alpha1.ArgoCD{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "argocd",
+					Namespace: "default",
+					Annotations: map[string]string{
+						constants.AnnotationImageVersionUpdatePolicy: constants.ImageVersionUpdatePolicyIfNotPresent,
+					},
+				},
+				Spec: argoprojv1alpha1.ArgoCDSpec{
+					Redis: argoprojv1alpha1.ArgoCDRedisSpec{
+						Version: "latest",
+						Image:   "myredis",
+					},
+				},
+			}
+
+			mockHelm.
+				EXPECT().
+				Upgrade(argocd.Name, gomock.Any(), Values("namespaces", []string{"default"}), true).
+				Return(nil)
+
+			actual := testReconcile(mockHelm, argocd)
+			Ω(actual.Spec.Redis.Image).Should(Equal(argocd.Spec.Redis.Image))
+			Ω(actual.Spec.Redis.Version).Should(Equal(argocd.Spec.Redis.Version))
+		})
+		It("should_set_redis_image_and_version_always", func() {
+			image := "redis"
+			tag := "v1.2.3"
+
+			Ω(os.Setenv(constants.EnvRedisImage, fmt.Sprintf("%s:%s", image, tag))).ShouldNot(HaveOccurred())
+
+			argocd := &argoprojv1alpha1.ArgoCD{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "argocd",
+					Namespace: "default",
+					Annotations: map[string]string{
+						constants.AnnotationImageVersionUpdatePolicy: constants.ImageVersionUpdatePolicyAlways,
+					},
+				},
+				Spec: argoprojv1alpha1.ArgoCDSpec{
+					Redis: argoprojv1alpha1.ArgoCDRedisSpec{
+						Version: "latest",
+						Image:   "myredis",
+					},
+				},
+			}
+
+			mockHelm.
+				EXPECT().
+				Upgrade(argocd.Name, gomock.Any(), Values("namespaces", []string{"default"}), true).
+				Return(nil)
+
+			actual := testReconcile(mockHelm, argocd)
+			Ω(actual.Spec.Redis.Image).Should(Equal(image))
+			Ω(actual.Spec.Redis.Version).Should(Equal(tag))
+		})
+		It("should_set_redis_image_only", func() {
+			image := "redis"
+
+			Ω(os.Setenv(constants.EnvRedisImage, image)).ShouldNot(HaveOccurred())
+
+			argocd := &argoprojv1alpha1.ArgoCD{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "argocd",
+					Namespace: "default",
+					Annotations: map[string]string{
+						constants.AnnotationImageVersionUpdatePolicy: constants.ImageVersionUpdatePolicyAlways,
+					},
+				},
+				Spec: argoprojv1alpha1.ArgoCDSpec{
+					Redis: argoprojv1alpha1.ArgoCDRedisSpec{
+						Version: "latest",
+						Image:   "myredis",
+					},
+				},
+			}
+
+			mockHelm.
+				EXPECT().
+				Upgrade(argocd.Name, gomock.Any(), Values("namespaces", []string{"default"}), true).
+				Return(nil)
+
+			actual := testReconcile(mockHelm, argocd)
+			Ω(actual.Spec.Redis.Image).Should(Equal(image))
+			Ω(actual.Spec.Redis.Version).Should(Equal(argocd.Spec.Redis.Version))
+		})
+		It("should_set_redis_version_only", func() {
+			tag := "v1.2.3"
+
+			Ω(os.Setenv(constants.EnvRedisImage, ":"+tag)).ShouldNot(HaveOccurred())
+
+			argocd := &argoprojv1alpha1.ArgoCD{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "argocd",
+					Namespace: "default",
+					Annotations: map[string]string{
+						constants.AnnotationImageVersionUpdatePolicy: constants.ImageVersionUpdatePolicyAlways,
+					},
+				},
+				Spec: argoprojv1alpha1.ArgoCDSpec{
+					Redis: argoprojv1alpha1.ArgoCDRedisSpec{
+						Version: "latest",
+						Image:   "myredis",
+					},
+				},
+			}
+
+			mockHelm.
+				EXPECT().
+				Upgrade(argocd.Name, gomock.Any(), Values("namespaces", []string{"default"}), true).
+				Return(nil)
+
+			actual := testReconcile(mockHelm, argocd)
+			Ω(actual.Spec.Redis.Image).Should(Equal(argocd.Spec.Redis.Image))
+			Ω(actual.Spec.Redis.Version).Should(Equal(tag))
 		})
 		It("should_not_add_namespaces_for_cluster_argocd", func() {
 			argocd := &argoprojv1alpha1.ArgoCD{

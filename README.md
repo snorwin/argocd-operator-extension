@@ -22,6 +22,8 @@ The **argocd-operator-extension** solves all the issue described in the previous
 The **argocd-operator-extension** reconciles the `ArgoCD` customer resource of the Argo CD Operator and installs a Helm chart which contains the internal service accounts and role bindings as well as the role bindings to the `argocd-edit` and `argocd-view` cluster role for all the namespaces with the label `argocd.snorwin.io/name` and `argocd.snorwin.io/namespace` set to the namespaced name of the reconciled object.
 The ArgoCD RBAC blueprint is defined as a [Helm chart](helm/charts/argocd-operator-extension/resources) and mounted to the extension using a config map which allows you to use this operator with your existing roles and adapt it that it fits your requirements without re-building the image of the extension.
 
+Upgrading many Argo CD instances in a cluster by hand is inefficient, therefore the extension is able to manage the images and version of Dex, Argo CD and Redis automatically in the `ArgoCD` customer resource based on the update policy (`None`, `Always` or `IfNotPresent`) annotated to the resource itself. The images and versions can be set using environment variables. 
+
 ## Getting Started
 ### Installation
 There are two ways how the **argocd-operator-extension** can be installed:
@@ -48,8 +50,10 @@ _Prerequisite: Argo CD Operator is already installed_
     apiVersion: argoproj.io/v1alpha1
     kind: ArgoCD
     metadata:
-    name: example-argocd
-    namespace: example
+        name: example-argocd
+        namespace: example
+        annotations:
+            argocd.snorwin.io/image-update-policy: Always
     spec: {}
     ```
 2. Add labels to the application's target namespace:
@@ -63,6 +67,9 @@ _Prerequisite: Argo CD Operator is already installed_
  - `HELM_DRIVER` - helm storage driver. It can be set to one of the values: `configmap`, `secret`, `memory` (default value: `secret`)
  - `HELM_MAX_HISTORY` - limit the maximum number of revisions saved per helm release (default: 10). Use 0 for no limit.
  - `CLUSTER_ARGOCD_NAMESPACEDNAMES` - comma separated list of NamespacedNames (`namespace/name`) of Argo CD instances which run in cluster mode
+ - `ARGOCD_IMAGE` - ArgoCD image and version `[<image>]:[<version>]` used for automated version updates
+ - `DEX_IMAGE` - Dex image and version `[<image>]:[<version>]` used for automated version updates
+ - `REDIS_IMAGE` - Redis image and version `[<image>]:[<version>]` used for automated version updates
  
  ## Compatibility
  The **argocd-operator-extension** is compatible with the version [v0.0.14](https://github.com/argoproj-labs/argocd-operator/releases/tag/v0.0.14) of the Argo CD Operator.
