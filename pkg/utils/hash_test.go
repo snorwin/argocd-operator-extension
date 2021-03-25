@@ -14,7 +14,7 @@ var _ = Describe("Hash", func() {
 	Context("Hash", func() {
 		It("should_be_idempotent", func() {
 			chart := &chart.Chart{
-				Files: []*chart.File{
+				Raw: []*chart.File{
 					{
 						Name: "file1.yaml",
 						Data: []byte{1, 1, 1, 1},
@@ -41,21 +41,21 @@ var _ = Describe("Hash", func() {
 				ShouldNot(Equal(utils.Hash(&chart.Chart{}, chartutil.Values{"key1": "value1", "key2": "value2", "key3": "changed"})))
 		})
 		It("should_be_different_if_chart_files_are_different", func() {
-			Ω(utils.Hash(&chart.Chart{Files: []*chart.File{{Name: "file1.yaml", Data: []byte{1, 1, 1, 1}}}}, chartutil.Values{})).
-				ShouldNot(Equal(utils.Hash(&chart.Chart{Files: []*chart.File{{Name: "file1.yaml", Data: []byte{1, 1, 1}}}}, chartutil.Values{})))
+			Ω(utils.Hash(&chart.Chart{Raw: []*chart.File{{Name: "file1.yaml", Data: []byte{1, 1, 1, 1}}}}, chartutil.Values{})).
+				ShouldNot(Equal(utils.Hash(&chart.Chart{Raw: []*chart.File{{Name: "file1.yaml", Data: []byte{1, 1, 1}}}}, chartutil.Values{})))
 
-			Ω(utils.Hash(&chart.Chart{Files: []*chart.File{{Name: "file1.yaml", Data: []byte{1, 1, 1, 1}}}}, chartutil.Values{})).
-				ShouldNot(Equal(utils.Hash(&chart.Chart{Files: []*chart.File{{Name: "file2.yaml", Data: []byte{1, 1, 1, 1}}}}, chartutil.Values{})))
+			Ω(utils.Hash(&chart.Chart{Raw: []*chart.File{{Name: "file1.yaml", Data: []byte{1, 1, 1, 1}}}}, chartutil.Values{})).
+				ShouldNot(Equal(utils.Hash(&chart.Chart{Raw: []*chart.File{{Name: "file2.yaml", Data: []byte{1, 1, 1, 1}}}}, chartutil.Values{})))
 		})
-		It("should_ignore_file_order_and_nil", func() {
+		It("should_ignore_file_order_and_full_path_and_nil", func() {
 			chart1 := &chart.Chart{
-				Files: []*chart.File{
+				Raw: []*chart.File{
 					{
-						Name: "file1.yaml",
+						Name: "..1111/file1.yaml",
 						Data: []byte{1, 1, 1, 1},
 					},
 					{
-						Name: "file2.yaml",
+						Name: "..1111/file2.yaml",
 						Data: []byte{2, 2, 2, 2},
 					},
 					nil,
@@ -63,14 +63,14 @@ var _ = Describe("Hash", func() {
 			}
 
 			chart2 := &chart.Chart{
-				Files: []*chart.File{
+				Raw: []*chart.File{
 					{
-						Name: "file2.yaml",
+						Name: "..2222/file2.yaml",
 						Data: []byte{2, 2, 2, 2},
 					},
 					nil,
 					{
-						Name: "file1.yaml",
+						Name: "..2222/file1.yaml",
 						Data: []byte{1, 1, 1, 1},
 					},
 					nil,
@@ -96,7 +96,7 @@ var _ = Describe("Hash", func() {
 		})
 		It("should_not_modify_file_order", func() {
 			expected := &chart.Chart{
-				Files: []*chart.File{
+				Raw: []*chart.File{
 					{
 						Name: "zzzz",
 						Data: []byte{1, 1, 1, 1},
@@ -112,7 +112,7 @@ var _ = Describe("Hash", func() {
 				},
 			}
 			actual := &chart.Chart{
-				Files: []*chart.File{
+				Raw: []*chart.File{
 					{
 						Name: "zzzz",
 						Data: []byte{1, 1, 1, 1},
@@ -130,7 +130,7 @@ var _ = Describe("Hash", func() {
 
 			utils.Hash(actual, chartutil.Values{})
 
-			Ω(actual.Files).Should(Equal(expected.Files))
+			Ω(actual.Raw).Should(Equal(expected.Raw))
 		})
 	})
 })

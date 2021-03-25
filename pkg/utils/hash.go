@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"hash/fnv"
+	"path/filepath"
 	"sort"
 
 	helm "helm.sh/helm/v3/pkg/chart"
@@ -15,16 +16,16 @@ func Hash(chart *helm.Chart, values chartutil.Values) string {
 	algorithm := fnv.New64()
 
 	// copy and sort the helm chart's files
-	files := make([]*helm.File, len(chart.Files))
-	copy(files, chart.Files)
+	files := make([]*helm.File, len(chart.Raw))
+	copy(files, chart.Raw)
 	sort.Slice(files, func(i, j int) bool {
-		return files[i] == nil || files[j] == nil || files[i].Name > files[j].Name
+		return files[i] == nil || files[j] == nil || filepath.Base(files[i].Name) > filepath.Base(files[j].Name)
 	})
 
 	// add files to the hash
 	for _, file := range files {
 		if file != nil {
-			_, _ = algorithm.Write([]byte(file.Name))
+			_, _ = algorithm.Write([]byte(filepath.Base(file.Name)))
 			_, _ = algorithm.Write(file.Data)
 		}
 	}
