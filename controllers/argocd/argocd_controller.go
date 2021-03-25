@@ -10,6 +10,7 @@ import (
 	"github.com/snorwin/argocd-operator-extension/pkg/constants"
 	"github.com/snorwin/argocd-operator-extension/pkg/helm"
 	"github.com/snorwin/argocd-operator-extension/pkg/mapper"
+	"github.com/snorwin/argocd-operator-extension/pkg/utils"
 	"github.com/snorwin/jsonpatch"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/chartutil"
@@ -72,7 +73,7 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-// Reconcile create the RBAC (rolebindings, roles and servicaccounts) for an ArgoCD instance
+// Reconcile create the RBAC (role bindings, roles and service accounts) for an ArgoCD instance
 func (r *Reconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()
 	logger := r.Log.WithValues("argocd", req.NamespacedName)
@@ -216,9 +217,31 @@ func (r *Reconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		values["namespaces"] = slice
 	}
 
-	// upgrade or install helm chart
-	if err = helm.Upgrade(req.Name, chart, values, true); err != nil {
-		return reconcile.Result{}, err
+	// only run helm upgrade if changes are needed
+	hash := utils.Hash(chart, values)
+	if value, ok := obj.Annotations[constants.AnnotationHelmHash]; !ok || value != hash {
+		// upgrade or install helm chart
+		if err = helm.Upgrade(req.Name, chart, values, true); err != nil {
+			return reconcile.Result{}, err
+		}
+
+		// update helm hash annotation
+		original := obj.ObjectMeta.DeepCopy()
+		if obj.ObjectMeta.Annotations == nil {
+			obj.ObjectMeta.Annotations = make(map[string]string)
+		}
+		obj.ObjectMeta.Annotations[constants.AnnotationHelmHash] = hash
+
+		patches, err := jsonpatch.CreateJSONPatch(&obj.ObjectMeta, original, jsonpatch.WithPrefix(jsonpatch.ParseJSONPointer("/metadata")))
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+
+		if patches.Len() > 0 {
+			if err = r.Patch(ctx, &obj, client.RawPatch(types.JSONPatchType, patches.Raw())); err != nil {
+				return reconcile.Result{}, err
+			}
+		}
 	}
 
 	return ctrl.Result{}, nil

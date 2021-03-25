@@ -18,6 +18,8 @@ import (
 	"github.com/snorwin/argocd-operator-extension/pkg/constants"
 	"github.com/snorwin/argocd-operator-extension/pkg/helm"
 	mock_helm "github.com/snorwin/argocd-operator-extension/pkg/mocks/helm"
+	"github.com/snorwin/argocd-operator-extension/pkg/utils"
+	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/chartutil"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -73,6 +75,7 @@ var _ = Describe("Reconciler", func() {
 
 			actual := testReconcile(mockHelm, argocd)
 			Ω(actual.Finalizers).Should(ContainElement(constants.FinalizerName))
+			Ω(actual.Annotations).Should(HaveKey(constants.AnnotationHelmHash))
 		})
 		It("should_set_argocd_image_and_version_if_not_present", func() {
 			image := "argocd"
@@ -507,6 +510,55 @@ var _ = Describe("Reconciler", func() {
 			Ω(actual.Spec.Redis.Image).Should(Equal(argocd.Spec.Redis.Image))
 			Ω(actual.Spec.Redis.Version).Should(Equal(tag))
 		})
+		It("should_not_upgrade_helm_chart_if_not_needed", func() {
+			chart, err := loader.Load(os.Getenv(constants.EnvHelmDirectory))
+			Ω(err).ShouldNot(HaveOccurred())
+
+			values := map[string]interface{}{
+				"namespaces": []string{"default"},
+			}
+
+			argocd := &argoprojv1alpha1.ArgoCD{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "argocd",
+					Namespace: "default",
+					Annotations: map[string]string{
+						constants.AnnotationHelmHash: utils.Hash(chart, values),
+					},
+					ResourceVersion: "2",
+					Finalizers: []string{
+						constants.FinalizerName,
+					},
+				},
+			}
+
+			actual := testReconcile(mockHelm, argocd)
+			Ω(actual.ResourceVersion).Should(Equal(argocd.ResourceVersion))
+		})
+		It("should_upgrade_helm_chart_and_update_helm_hash", func() {
+			argocd := &argoprojv1alpha1.ArgoCD{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "argocd",
+					Namespace: "default",
+					Annotations: map[string]string{
+						constants.AnnotationHelmHash: "xxxxxxxxxxxxxxxx",
+					},
+					ResourceVersion: "2",
+					Finalizers: []string{
+						constants.FinalizerName,
+					},
+				},
+			}
+
+			mockHelm.
+				EXPECT().
+				Upgrade(argocd.Name, gomock.Any(), Values("namespaces", []string{"default"}), true).
+				Return(nil)
+
+			actual := testReconcile(mockHelm, argocd)
+			Ω(actual.Annotations).Should(HaveKeyWithValue(constants.AnnotationHelmHash, Not(Equal(argocd.Annotations[constants.AnnotationHelmHash]))))
+		})
+
 		It("should_not_add_namespaces_for_cluster_argocd", func() {
 			argocd := &argoprojv1alpha1.ArgoCD{
 				ObjectMeta: metav1.ObjectMeta{
