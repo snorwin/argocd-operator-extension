@@ -10,7 +10,7 @@ import (
 	"helm.sh/helm/v3/pkg/chartutil"
 )
 
-// Hash creates a 32-bit FNV-1 hash of the Helm chart including the values
+// Hash creates a 64-bit FNV-1 hash of the Helm chart including the values
 func Hash(chart *helm.Chart, values chartutil.Values) string {
 	algorithm := fnv.New64()
 
@@ -35,5 +35,5 @@ func Hash(chart *helm.Chart, values chartutil.Values) string {
 	}
 
 	// convert hash sum to hex string
-	return fmt.Sprintf("%08x", algorithm.Sum64())
+	return fmt.Sprintf("%016x", algorithm.Sum64())
 }

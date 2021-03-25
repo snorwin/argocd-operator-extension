@@ -541,7 +541,7 @@ var _ = Describe("Reconciler", func() {
 					Name:      "argocd",
 					Namespace: "default",
 					Annotations: map[string]string{
-						constants.AnnotationHelmHash: "xxxxxxxxxxxxxxxx",
+						constants.AnnotationHelmHash: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
 					},
 					ResourceVersion: "2",
 					Finalizers: []string{
