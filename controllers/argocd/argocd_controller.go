@@ -3,6 +3,7 @@ package argocd
 import (
 	"context"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -213,6 +214,9 @@ func (r *Reconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 			r.mapper.Graph.AddDependency(ref, mapper.ReferenceFromObject(&namespace))
 		}
 		slice = add(slice, req.Namespace)
+
+		// sort namespaces
+		sort.Strings(slice)
 
 		values["namespaces"] = slice
 	}
