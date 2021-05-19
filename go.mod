@@ -4,7 +4,7 @@ go 1.15
 
 require (
 	github.com/Azure/go-autorest/autorest/adal v0.9.10 // indirect
-	github.com/argoproj-labs/argocd-operator v0.0.14
+	github.com/argoproj-labs/argocd-operator v0.0.15
 	github.com/go-logr/logr v0.3.0
 	github.com/golang/mock v1.4.4
 	github.com/onsi/ginkgo v1.15.0
@@ -21,6 +21,8 @@ require (
 
 replace (
 	github.com/go-logr/logr => github.com/go-logr/logr v0.1.0
+	github.com/mikefarah/yaml/v2 => gopkg.in/yaml.v2 v2.4.0
+	github.com/openshift/api => github.com/openshift/api v0.0.0-20190916204813-cdbe64fb0c91
 	k8s.io/api => k8s.io/api v0.19.4
 	k8s.io/cli-runtime => k8s.io/cli-runtime v0.19.4
 	k8s.io/client-go => k8s.io/client-go v0.19.4
