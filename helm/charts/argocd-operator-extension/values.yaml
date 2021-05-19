@@ -13,6 +13,6 @@ resources:
     cpu: 100m
     memory: 128Mi
 images:
-  argocd: argoproj/argocd:v1.8.6
-  dex: dexidp/dex:v2.27.0
-  redis: redis:5.0.10-alpine
+  argocd: argoproj/argocd:v2.0.1
+  dex: dexidp/dex:v2.28.1
+  redis: redis:5.0.12-alpine
