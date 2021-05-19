@@ -6,7 +6,7 @@ require (
 	github.com/Azure/go-autorest/autorest/adal v0.9.10 // indirect
 	github.com/argoproj-labs/argocd-operator v0.0.15
 	github.com/go-logr/logr v0.3.0
-	github.com/golang/mock v1.4.4
+	github.com/golang/mock v1.5.0
 	github.com/onsi/ginkgo v1.15.0
 	github.com/onsi/gomega v1.10.5
 	github.com/snorwin/jsonpatch v1.4.0
