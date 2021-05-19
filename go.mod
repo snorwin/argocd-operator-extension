@@ -1,6 +1,6 @@
 module github.com/snorwin/argocd-operator-extension
 
-go 1.15
+go 1.16
 
 require (
 	github.com/Azure/go-autorest/autorest/adal v0.9.10 // indirect
