@@ -72,4 +72,4 @@ _Prerequisite: Argo CD Operator is already installed_
  - `REDIS_IMAGE` - Redis image and version `[<image>][:<version>]` used for automated version updates
  
  ## Compatibility
- The **argocd-operator-extension** is compatible with the version [v0.0.14](https://github.com/argoproj-labs/argocd-operator/releases/tag/v0.0.14) of the Argo CD Operator.
+ The **argocd-operator-extension** is compatible with the version [v0.0.14](https://github.com/argoproj-labs/argocd-operator/releases/tag/v0.0.14) and [v0.0.15](https://github.com/argoproj-labs/argocd-operator/releases/tag/v0.0.15) of the Argo CD Operator.
