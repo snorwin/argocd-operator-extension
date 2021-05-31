@@ -7,7 +7,7 @@ require (
 	github.com/argoproj-labs/argocd-operator v0.0.15
 	github.com/go-logr/logr v0.3.0
 	github.com/golang/mock v1.5.0
-	github.com/onsi/ginkgo v1.16.2
+	github.com/onsi/ginkgo v1.16.3
 	github.com/onsi/gomega v1.10.5
 	github.com/snorwin/jsonpatch v1.4.0
 	go.uber.org/zap v1.17.0
