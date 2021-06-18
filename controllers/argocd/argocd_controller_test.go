@@ -571,7 +571,7 @@ var _ = Describe("Reconciler", func() {
 
 			mockHelm.
 				EXPECT().
-				Upgrade(argocd.Name, gomock.Any(), Values("namespaces", nil), true).
+				Upgrade(argocd.Name, gomock.Any(), Values("namespaces", []string{}), true).
 				Return(nil)
 
 			testReconcile(mockHelm, argocd)
