@@ -219,6 +219,8 @@ func (r *Reconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		sort.Strings(slice)
 
 		values["namespaces"] = slice
+	} else {
+		values["namespaces"] = []string{}
 	}
 
 	// only run helm upgrade if changes are needed
