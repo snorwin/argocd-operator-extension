@@ -10,7 +10,7 @@ require (
 	github.com/onsi/ginkgo v1.16.4
 	github.com/onsi/gomega v1.10.5
 	github.com/snorwin/jsonpatch v1.4.0
-	go.uber.org/zap v1.17.0
+	go.uber.org/zap v1.18.1
 	helm.sh/helm/v3 v3.4.2
 	k8s.io/api v0.19.4
 	k8s.io/apimachinery v0.19.4
