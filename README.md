@@ -1,3 +1,5 @@
+> :warning: **WARNING** this project is no longer supported - please upgrade to [v0.1.0](https://github.com/argoproj-labs/argocd-operator/releases/tag/v0.1.0) of the Argo CD Operator, which provides similar functionality.
+
 # argocd-operator-extension
 [![GitHub Action](https://img.shields.io/badge/GitHub-Action-blue)](https://github.com/features/actions)
 [![Build](https://img.shields.io/github/workflow/status/snorwin/argocd-operator-extension/CI?label=build&logo=github)](https://github.com/snorwin/argocd-operator-extension/actions)
